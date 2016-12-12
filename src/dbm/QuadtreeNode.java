@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 class QuadtreeNode {
-	
+
 	private static final int TOP_NEIGHBOR = 0;
 	private static final int BOTTOM_NEIGHBOR = 1;
 	private static final int LEFT_NEIGHBOR = 2;
 	private static final int RIGHT_NEIGHBOR = 3;
-	
-	static final int[] NEIGHBOR_DIRS = {TOP_NEIGHBOR, BOTTOM_NEIGHBOR, LEFT_NEIGHBOR, RIGHT_NEIGHBOR};
+
+	static final int[] NEIGHBOR_DIRS = { TOP_NEIGHBOR, BOTTOM_NEIGHBOR, LEFT_NEIGHBOR, RIGHT_NEIGHBOR };
 
 	QuadtreeNode parent;
 	/**
@@ -59,26 +59,28 @@ class QuadtreeNode {
 
 	int type = 0;
 
-	QuadtreeNode(QuadtreeNode parent, double leftX, double rightX, double topY, double bottomY, int depth, double potential) {
-			this.parent = parent;
-			this.depth = depth;
-			this.leftX = leftX;
-			this.rightX = rightX;
-			this.midX = (leftX + rightX) / 2;
-			this.topY = topY;
-			this.bottomY = bottomY;
-			this.midY = (topY + bottomY) / 2;
-			this.potential = potential;
-			this.isLeaf = true;
-			this.isBoundary = false;
-		}
+	QuadtreeNode(QuadtreeNode parent, double leftX, double rightX, double topY, double bottomY, int depth,
+			double potential) {
+		this.parent = parent;
+		this.depth = depth;
+		this.leftX = leftX;
+		this.rightX = rightX;
+		this.midX = (leftX + rightX) / 2;
+		this.topY = topY;
+		this.bottomY = bottomY;
+		this.midY = (topY + bottomY) / 2;
+		this.potential = potential;
+		this.isLeaf = true;
+		this.isBoundary = false;
+	}
 
 	QuadtreeNode(int depth) {
-			this.parent = null;
-			this.depth = depth;
-			this.isBoundary = true;
+		this.parent = null;
+		this.depth = depth;
+		this.isBoundary = true;
+		this.isLeaf = true;
 
-		}
+	}
 
 	void subdivide() {
 		System.out.println("divide  " + depth);
@@ -93,87 +95,92 @@ class QuadtreeNode {
 		children.add(new QuadtreeNode(this, leftX, midX, midY, bottomY, depth + 1, potential));
 		isLeaf = false;
 	}
-	
+
 	QuadtreeNode getNeighborAbove() {
-		if (parent == null) return null;
+		if (parent == null)
+			return null;
 
-		  // if it is the southern child of the parent
-		  if (parent.children.get(3) == this) 
-			  return parent.children.get(0);
-		  if (parent.children.get(2) == this) 
-			  return parent.children.get(1);
+		// if it is the southern child of the parent
+		if (parent.children.get(3) == this)
+			return parent.children.get(0);
+		if (parent.children.get(2) == this)
+			return parent.children.get(1);
 
-		  // else look up higher
-		  QuadtreeNode pneighbor = parent.getNeighborAbove();
+		// else look up higher
+		QuadtreeNode pneighbor = parent.getNeighborAbove();
 
-		  if (pneighbor == null || pneighbor.children.isEmpty()) {
-			  return pneighbor;
-		  } else if (parent.children.get(0) == this) {
-			  // if it is the upper left child of the parent, the neighbor above should be the bottom left child of pneighbor
-			  return pneighbor.children.get(3);
-		  } else {
-			  // if it is the NE child of the parent
-			  return pneighbor.children.get(2);
-		  }
+		if (pneighbor == null || pneighbor.children.isEmpty()) {
+			return pneighbor;
+		} else if (parent.children.get(0) == this) {
+			// if it is the upper left child of the parent, the neighbor above
+			// should be the bottom left child of pneighbor
+			return pneighbor.children.get(3);
+		} else {
+			// if it is the NE child of the parent
+			return pneighbor.children.get(2);
+		}
 	}
-	
+
 	QuadtreeNode getNeighborBelow() {
-		if (parent == null) return null;
+		if (parent == null)
+			return null;
 
-		  if (parent.children.get(0) == this) 
-			  return parent.children.get(3);
-		  if (parent.children.get(1) == this) 
-			  return parent.children.get(2);
+		if (parent.children.get(0) == this)
+			return parent.children.get(3);
+		if (parent.children.get(1) == this)
+			return parent.children.get(2);
 
-		  QuadtreeNode pneighbor = parent.getNeighborBelow();
+		QuadtreeNode pneighbor = parent.getNeighborBelow();
 
-		  if (pneighbor == null || pneighbor.children.isEmpty()) {
-			  return pneighbor;
-		  } else if (parent.children.get(3) == this) {
-			  return pneighbor.children.get(0);
-		  } else {
-			  return pneighbor.children.get(1);
-		  }
+		if (pneighbor == null || pneighbor.children.isEmpty()) {
+			return pneighbor;
+		} else if (parent.children.get(3) == this) {
+			return pneighbor.children.get(0);
+		} else {
+			return pneighbor.children.get(1);
+		}
 	}
-	
+
 	QuadtreeNode getNeighborLeft() {
-		if (parent == null) return null;
+		if (parent == null)
+			return null;
 
-		  if (parent.children.get(1) == this) 
-			  return parent.children.get(0);
-		  if (parent.children.get(2) == this) 
-			  return parent.children.get(3);
+		if (parent.children.get(1) == this)
+			return parent.children.get(0);
+		if (parent.children.get(2) == this)
+			return parent.children.get(3);
 
-		  QuadtreeNode pneighbor = parent.getNeighborLeft();
+		QuadtreeNode pneighbor = parent.getNeighborLeft();
 
-		  if (pneighbor == null || pneighbor.children.isEmpty()) {
-			  return pneighbor;
-		  } else if (parent.children.get(0) == this) {
-			  return pneighbor.children.get(1);
-		  } else {
-			  return pneighbor.children.get(2);
-		  }
+		if (pneighbor == null || pneighbor.children.isEmpty()) {
+			return pneighbor;
+		} else if (parent.children.get(0) == this) {
+			return pneighbor.children.get(1);
+		} else {
+			return pneighbor.children.get(2);
+		}
 	}
-	
+
 	QuadtreeNode getNeighborRight() {
-		if (parent == null) return null;
+		if (parent == null)
+			return null;
 
-		  if (parent.children.get(0) == this) 
-			  return parent.children.get(1);
-		  if (parent.children.get(3) == this) 
-			  return parent.children.get(2);
+		if (parent.children.get(0) == this)
+			return parent.children.get(1);
+		if (parent.children.get(3) == this)
+			return parent.children.get(2);
 
-		  QuadtreeNode pneighbor = parent.getNeighborRight();
+		QuadtreeNode pneighbor = parent.getNeighborRight();
 
-		  if (pneighbor == null || pneighbor.children.isEmpty()) {
-			  return pneighbor;
-		  } else if (parent.children.get(1) == this) {
-			  return pneighbor.children.get(0);
-		  } else {
-			  return pneighbor.children.get(3);
-		  }
+		if (pneighbor == null || pneighbor.children.isEmpty()) {
+			return pneighbor;
+		} else if (parent.children.get(1) == this) {
+			return pneighbor.children.get(0);
+		} else {
+			return pneighbor.children.get(3);
+		}
 	}
-	
+
 	QuadtreeNode getNeighbor(int dir) {
 		switch (dir) {
 		case TOP_NEIGHBOR:
@@ -188,7 +195,69 @@ class QuadtreeNode {
 			throw new RuntimeException("Undefined neighbor direction constant.");
 		}
 	}
-	
+
+	void populateNeighbors() {
+		QuadtreeNode neighborAbove = getNeighborAbove();
+		if (neighborAbove != null) {
+			if (!neighborAbove.children.isEmpty()) {
+				neighbors.add(neighborAbove);
+				neighbors.add(null);
+			} else {
+				neighbors.add(neighborAbove.children.get(3));
+				neighbors.add(neighborAbove.children.get(2));
+			}
+		} else {
+			neighbors.add(new QuadtreeNode(depth));
+			neighbors.add(null);
+		}
+		
+		QuadtreeNode neighborRight = getNeighborRight();
+		if (neighborRight != null) {
+			if (!neighborRight.children.isEmpty()) {
+				neighbors.add(neighborRight);
+				neighbors.add(null);
+			} else {
+				neighbors.add(neighborRight.children.get(0));
+				neighbors.add(neighborRight.children.get(3));
+			}
+		} else {
+			neighbors.add(new QuadtreeNode(depth));
+			neighbors.add(null);
+		}
+		
+		QuadtreeNode neighborBelow = getNeighborBelow();
+		if (neighborBelow != null) {
+			if (!neighborBelow.children.isEmpty()) {
+				neighbors.add(neighborBelow);
+				neighbors.add(null);
+			} else {
+				neighbors.add(neighborBelow.children.get(1));
+				neighbors.add(neighborBelow.children.get(0));
+			}
+		} else {
+			neighbors.add(new QuadtreeNode(depth));
+			neighbors.add(null);
+		}
+		
+		QuadtreeNode neighborLeft = getNeighborLeft();
+		if (neighborLeft != null) {
+			if (!neighborLeft.children.isEmpty()) {
+				neighbors.add(neighborLeft);
+				neighbors.add(null);
+			} else {
+				neighbors.add(neighborLeft.children.get(2));
+				neighbors.add(neighborLeft.children.get(1));
+			}
+		} else {
+			neighbors.add(new QuadtreeNode(depth));
+			neighbors.add(null);
+		}
+		
+		if (neighbors.size() != 8) {
+			System.err.println("NEIGHBORS SIZE INCORRECT:  " + neighbors.size());
+		}
+	}
+
 	QuadtreeNode getNeighborTopLeft(QuadtreeNode node) {
 		QuadtreeNode neighborAbove = node.getNeighborAbove();
 		if (neighborAbove != null) {
@@ -197,7 +266,7 @@ class QuadtreeNode {
 			return null;
 		}
 	}
-	
+
 	QuadtreeNode getNeighborTopRight(QuadtreeNode node) {
 		QuadtreeNode neighborAbove = node.getNeighborAbove();
 		if (neighborAbove != null) {
@@ -206,7 +275,7 @@ class QuadtreeNode {
 			return null;
 		}
 	}
-	
+
 	QuadtreeNode getNeighborBottomLeft(QuadtreeNode node) {
 		QuadtreeNode neighborBelow = node.getNeighborBelow();
 		if (neighborBelow != null) {
@@ -215,7 +284,7 @@ class QuadtreeNode {
 			return null;
 		}
 	}
-	
+
 	QuadtreeNode getNeighborBottomRight(QuadtreeNode node) {
 		QuadtreeNode neighborBelow = node.getNeighborBelow();
 		if (neighborBelow != null) {

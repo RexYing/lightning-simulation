@@ -1,11 +1,7 @@
 package dbm;
 
-import java.awt.Point;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.soap.Node;
 
 import com.jogamp.opengl.GL2;
 
@@ -21,6 +17,8 @@ public class BalancedQuadtree {
 	private List<QuadtreeNode> finestLeaves = new ArrayList<>();
 
 	private int maxDepth;
+	
+	private boolean solveFirstTime = true;
 
 	public BalancedQuadtree(int gridWidth, int gridHeight) {
 		root = new QuadtreeNode(null, 0, 1, 1, 0, 0, 0);
@@ -35,7 +33,7 @@ public class BalancedQuadtree {
 	}
 
 	public void drawBoundary(QuadtreeNode node, GL2 gl) {
-		gl.glColor4d(0.1, 0.1, 0.1, 0.1);
+		gl.glColor4d(0.2, 0.2, 0.2, 0.3);
 
 		gl.glBegin(GL2.GL_LINE_STRIP);
 		gl.glVertex2d(node.rightX, 1 - node.topY);
@@ -70,6 +68,24 @@ public class BalancedQuadtree {
 		List<QuadtreeNode> leaves = new ArrayList<>();
 		if (node.isLeaf) {
 			leaves.add(node);
+		} else {
+			for (QuadtreeNode child : node.children) {
+				leaves.addAll(getLeaves(child));
+			}
+		}
+		return leaves;
+	}
+	
+	private List<QuadtreeNode> getInteriorLeaves() {
+		return getInteriorLeaves(root);
+	}
+	
+	private List<QuadtreeNode> getInteriorLeaves(QuadtreeNode node) {
+		List<QuadtreeNode> leaves = new ArrayList<>();
+		if (node.isLeaf) {
+			if (!node.isBoundary) {
+				leaves.add(node);
+			}
 		} else {
 			for (QuadtreeNode child : node.children) {
 				leaves.addAll(getLeaves(child));
@@ -162,7 +178,7 @@ public class BalancedQuadtree {
 				}
 				finestLeaves.addAll(neighborTopLeft.parent.children);
 				for (QuadtreeNode child : neighborTopLeft.parent.children) {
-					setAttraction(neighborTopLeft);
+					setAttraction(child);
 				}
 			}
 
@@ -174,7 +190,7 @@ public class BalancedQuadtree {
 				}
 				finestLeaves.addAll(neighborTopRight.parent.children);
 				for (QuadtreeNode child : neighborTopRight.parent.children) {
-					setAttraction(neighborTopRight);
+					setAttraction(child);
 				}
 			}
 		}
@@ -189,7 +205,7 @@ public class BalancedQuadtree {
 				}
 				finestLeaves.addAll(neighborBottomLeft.parent.children);
 				for (QuadtreeNode child : neighborBottomLeft.parent.children) {
-					setAttraction(neighborBottomLeft);
+					setAttraction(child);
 				}
 			}
 
@@ -201,13 +217,13 @@ public class BalancedQuadtree {
 				}
 				finestLeaves.addAll(neighborBottomRight.parent.children);
 				for (QuadtreeNode child : neighborBottomRight.parent.children) {
-					setAttraction(neighborBottomRight);
+					setAttraction(child);
 				}
 			}
 		}
 	}
 
-	private List<QuadtreeNode> checkCandidate(QuadtreeNode node) {
+	public List<QuadtreeNode> checkCandidate(QuadtreeNode node) {
 		List<QuadtreeNode> candidates = new ArrayList<>();
 
 		QuadtreeNode neighborAbove = node.getNeighborAbove();
@@ -284,30 +300,57 @@ public class BalancedQuadtree {
 			idx++;
 		}
 	}
+	
+	private void buildNeighbors() {
+		List<QuadtreeNode> leaves = getLeaves();
+		
+		for (QuadtreeNode node : leaves) {
+			node.populateNeighbors();
+		}
+	}
+	
+	public int solve() {
+		balanceQuadtree();
+		buildNeighbors();
+		
+		List<QuadtreeNode> leaves = getInteriorLeaves();
+		
+		int numIterations = SimulationConstants.INTERATIONS;
+		if (solveFirstTime) {
+			numIterations = SimulationConstants.FIRST_TIME_SOLVE_ITERATIONS;
+			solveFirstTime = false;
+		}
+		PoissonEqSolver solver = new PoissonEqSolver(leaves, numIterations);
+		
+		return solver.solve();
+	}
 
 	private void setAttraction(QuadtreeNode node) {
-		if (Math.random() < 0.3) {
+		if (Math.random() < 0.2) {
 			node.isBoundary = true;
 			node.potential = 0.5;
 			node.isAttractor = true;
 			node.isCandidate = true;
+			node.type = ATTRACT;
 		}
 	}
 
-	public void setStart(double x, double y) {
+	public QuadtreeNode setStart(double x, double y) {
 		QuadtreeNode startNode = insert(x, y);
 		startNode.isBoundary = true;
 		startNode.potential = 0.0;
 		startNode.isCandidate = true;
 		startNode.type = START;
+		return startNode;
 	}
 
-	public void setTermination(double x, double y) {
+	public QuadtreeNode setTermination(double x, double y) {
 		QuadtreeNode terminateNode = insert(x, y);
 		terminateNode.isBoundary = true;
 		terminateNode.potential = 1;
 		terminateNode.isCandidate = true;
 		terminateNode.type = TERMINATE;
+		return terminateNode;
 	}
 
 	public int getMaxDepth() {

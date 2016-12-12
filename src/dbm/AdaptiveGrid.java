@@ -1,8 +1,8 @@
 package dbm;
 
 import java.awt.geom.Point2D;
-
-import javax.xml.soap.Node;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.jogamp.opengl.GL2;
 
@@ -18,10 +18,16 @@ public class AdaptiveGrid {
 	
 	private BalancedQuadtree quadtree;
 	
+	private int totalNumParticles = 0;
+	private int numNewParticlesBeforeSolve = SimulationConstants.SKIP;
+	
+	private List<QuadtreeNode> candidates = new ArrayList<>();
+	
 	public AdaptiveGrid(int gridWidth, int gridHeight, Point2D start, Point2D termination) {
 		this.quadtree = new BalancedQuadtree(gridWidth, gridHeight);
 		
-		quadtree.setStart(start.getX(), start.getY());
+		QuadtreeNode startNode = quadtree.setStart(start.getX(), start.getY());
+		candidates.addAll(quadtree.checkCandidate(startNode));
 		quadtree.setTermination(termination.getX(), termination.getY());
 
 	}
@@ -40,6 +46,24 @@ public class AdaptiveGrid {
 
 		gl.glPopMatrix();
 		
+	}
+	
+	/**
+	 * 
+	 * @return true if particle is added in simulation.
+	 */
+	public boolean addParticle() {
+		int iter = 0;
+		if (numNewParticlesBeforeSolve == SimulationConstants.SKIP) {
+			numNewParticlesBeforeSolve = 0;
+			iter = quadtree.solve();
+		} else {
+			numNewParticlesBeforeSolve++;
+		}
+		
+		
+		
+		return true;
 	}
 	
 	
