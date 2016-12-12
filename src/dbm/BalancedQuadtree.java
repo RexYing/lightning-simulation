@@ -203,9 +203,63 @@ public class BalancedQuadtree {
 			}
 		}
 	}
-	
-	private void checkCandidate(Node node) {
+
+	private List<QuadtreeNode> checkCandidate(QuadtreeNode node) {
+		List<QuadtreeNode> candidates = new ArrayList<>();
 		
+		QuadtreeNode neighborAbove = node.getNeighborAbove(); 
+		if (neighborAbove != null && neighborAbove.depth == maxDepth) {
+			if (!neighborAbove.isCandidate) {
+				candidates.add(neighborAbove);
+				neighborAbove.isCandidate = true;
+			}
+			
+			QuadtreeNode neighborTopLeft = neighborAbove.getNeighborLeft();
+			if (neighborTopLeft != null && !neighborTopLeft.isCandidate) {
+				candidates.add(neighborTopLeft);
+				neighborTopLeft.isCandidate = true;
+			}
+			
+			QuadtreeNode neighborTopRight = neighborAbove.getNeighborLeft();
+			if (neighborTopRight != null && !neighborTopRight.isCandidate) {
+				candidates.add(neighborTopRight);
+				neighborTopRight.isCandidate = true;
+			}
+		}
+		
+		QuadtreeNode neighborBelow = node.getNeighborBelow(); 
+		if (neighborBelow != null && neighborBelow.depth == maxDepth) {
+			if (!neighborBelow.isCandidate) {
+				candidates.add(neighborBelow);
+				neighborBelow.isCandidate = true;
+			}
+			
+			QuadtreeNode neighborBottomLeft = neighborBelow.getNeighborLeft();
+			if (neighborBottomLeft != null && !neighborBottomLeft.isCandidate) {
+				candidates.add(neighborBottomLeft);
+				neighborBottomLeft.isCandidate = true;
+			}
+			
+			QuadtreeNode neighborBottomRight = neighborBelow.getNeighborLeft();
+			if (neighborBottomRight != null && !neighborBottomRight.isCandidate) {
+				candidates.add(neighborBottomRight);
+				neighborBottomRight.isCandidate = true;
+			}
+		}
+		
+		QuadtreeNode neighborLeft = node.getNeighborLeft();
+		if (neighborLeft != null && !neighborLeft.isCandidate) {
+			candidates.add(neighborLeft);
+			neighborLeft.isCandidate = true;
+		}
+		
+		QuadtreeNode neighborRight = node.getNeighborRight();
+		if (neighborRight != null && !neighborRight.isCandidate) {
+			candidates.add(neighborRight);
+			neighborRight.isCandidate = true;
+		}
+		
+		return candidates;
 	}
 
 	private void setAttraction(QuadtreeNode node) {
@@ -231,5 +285,9 @@ public class BalancedQuadtree {
 		terminateNode.potential = 1;
 		terminateNode.isCandidate = true;
 		terminateNode.type = TERMINATE;
+	}
+	
+	public int getMaxDepth() {
+		return maxDepth;
 	}
 }

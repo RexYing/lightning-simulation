@@ -188,5 +188,40 @@ class QuadtreeNode {
 			throw new RuntimeException("Undefined neighbor direction constant.");
 		}
 	}
-
+	
+	QuadtreeNode getNeighborTopLeft(QuadtreeNode node) {
+		QuadtreeNode neighborAbove = node.getNeighborAbove();
+		if (neighborAbove != null) {
+			return neighborAbove.getNeighborLeft();
+		} else {
+			return null;
+		}
+	}
+	
+	QuadtreeNode getNeighborTopRight(QuadtreeNode node) {
+		QuadtreeNode neighborAbove = node.getNeighborAbove();
+		if (neighborAbove != null) {
+			return neighborAbove.getNeighborRight();
+		} else {
+			return null;
+		}
+	}
+	
+	QuadtreeNode getNeighborBottomLeft(QuadtreeNode node) {
+		QuadtreeNode neighborBelow = node.getNeighborBelow();
+		if (neighborBelow != null) {
+			return neighborBelow.getNeighborLeft();
+		} else {
+			return null;
+		}
+	}
+	
+	QuadtreeNode getNeighborBottomRight(QuadtreeNode node) {
+		QuadtreeNode neighborBelow = node.getNeighborBelow();
+		if (neighborBelow != null) {
+			return neighborBelow.getNeighborRight();
+		} else {
+			return null;
+		}
+	}
 }
