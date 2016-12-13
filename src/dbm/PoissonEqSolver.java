@@ -24,6 +24,9 @@ public class PoissonEqSolver {
 		this.iterations = iterations;
 		residuals = new ArrayList<>();
 		qCG = new ArrayList<>();
+		for (int i = 0; i < leaves.size(); i++) {
+			qCG.add(0.0);
+		}
 	}
 
 	public int solve() {
@@ -31,6 +34,9 @@ public class PoissonEqSolver {
 
 		for (QuadtreeNode node : leaves) {
 			node.computeStencil();
+			if (node.type == QuadtreeNode.TERMINATE) {
+				System.out.println("TERMINATOR in solve  " + node.isBoundary);
+			}
 		}
 
 		assignIndex();
@@ -60,7 +66,7 @@ public class PoissonEqSolver {
 								* node.stencil.get(2 * dir + 1);
 					}
 				}
-				qCG.add(-neighborSum + directions.get(j) * node.stencil.get(8));
+				qCG.set(j, -neighborSum + directions.get(j) * node.stencil.get(8));
 			}
 
 			// alpha: the step size at current iteration
@@ -106,7 +112,6 @@ public class PoissonEqSolver {
 			for (int i = 0; i < directions.size(); i++) {
 				directions.set(i, residuals.get(i) + beta * directions.get(i));
 			}
-
 			iter++;
 		}
 

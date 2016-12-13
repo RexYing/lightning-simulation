@@ -15,12 +15,14 @@ public class BalancedQuadtree {
 	private int maxDepth;
 	
 	private boolean solveFirstTime = true;
+	private boolean[][] noise;
 
 	public BalancedQuadtree(int gridWidth, int gridHeight) {
 		root = new QuadtreeNode(null, 0, 1, 1, 0, 0, 0);
 		root.subdivide();
 
 		maxDepth = (int) Math.ceil(Math.log(Math.max(gridWidth, gridHeight)) / Math.log(2));
+		noise = new NoiseSampler().poissonDiskSample(gridWidth, gridHeight, 5);
 		System.out.println("Max depth   " + maxDepth);
 	}
 
@@ -84,7 +86,7 @@ public class BalancedQuadtree {
 			}
 		} else {
 			for (QuadtreeNode child : node.children) {
-				leaves.addAll(getLeaves(child));
+				leaves.addAll(getInteriorLeaves(child));
 			}
 		}
 		return leaves;
@@ -322,7 +324,12 @@ public class BalancedQuadtree {
 	}
 
 	private void setAttraction(QuadtreeNode node) {
-		if (Math.random() < 0.2) {
+		if (node.type != QuadtreeNode.DEFAULT) {
+			return;
+		}
+		int x = (int) node.midX * (1 << maxDepth);
+		int y = (int) node.midY * (1 << maxDepth);
+		if (noise[x][y]) {
 			node.isBoundary = true;
 			node.potential = 0.5;
 			node.isAttractor = true;

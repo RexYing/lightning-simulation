@@ -353,6 +353,5 @@ class QuadtreeNode {
 			}
 		}
 		stencil.set(8, deltaSum);
-		
 	}
 }

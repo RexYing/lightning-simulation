@@ -60,7 +60,7 @@ public class Lightning implements GLEventListener {
 	    
 	    gui.simulateAndDisplayScene(gl);
 	    try {
-	    	Thread.sleep(1000);
+	    	Thread.sleep(100);
 	    } catch (InterruptedException e) {
 	    	System.out.println("Interrupted");
 	    }

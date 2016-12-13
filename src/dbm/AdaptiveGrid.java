@@ -39,10 +39,15 @@ public class AdaptiveGrid {
 		gl.glTranslated(-0.5, -0.5, 0);
 
 		for (QuadtreeNode node : quadtree.getLeaves()) {
+			if (node.type == QuadtreeNode.START) {
+				quadtree.drawNode(node, 0, 1, 0, gl);
+				continue;
+			}
 			if (node.isBoundary)
 				quadtree.drawNode(node, 0, 0, Math.max(node.potential, 0), gl);
 			else {
 				quadtree.drawNode(node, Math.max(node.potential, 0), 0, 0, gl);
+				//System.out.println(Math.max(node.potential, 0));
 			}
 		}
 		quadtree.drawBoundary(gl);
@@ -76,19 +81,21 @@ public class AdaptiveGrid {
 		
 		for (QuadtreeNode candidate : candidates) {
 			if (candidate.isCandidate) {
-				probDist.add(candidate.potential);
-				totalPotential += candidate.potential;
+				probDist.add(Math.pow(Math.max(0, candidate.potential), SimulationConstants.ETA));
+				totalPotential += Math.pow(Math.max(0, candidate.potential), SimulationConstants.ETA);
 			} else {
 				probDist.add(0.0);
 			}
 		}
 		
 		if (totalPotential < EPS) {
+			System.out.println("Brownian at current step");
+			System.out.println(totalPotential);
 			idxChosen = (int) (Math.random() * candidates.size());
 		} else {
 			double potentialSampleSum = probDist.get(0) / totalPotential;
 			double random = Math.random();
-			while (potentialSampleSum < random && idxChosen < candidates.size()) {
+			while (potentialSampleSum < random && idxChosen < candidates.size() - 1) {
 				idxChosen++;
 				potentialSampleSum += probDist.get(idxChosen) / totalPotential;
 			}
@@ -107,12 +114,12 @@ public class AdaptiveGrid {
 				neighborChosen = neighbor;
 			}
 		}
-		
+
 		quadtree.insert(addedNode.midX, addedNode.midY);
+
 		candidates.addAll(quadtree.checkCandidate(addedNode));
 		
 		terminated(addedNode);
-		
 		return true;
 	}
 	
