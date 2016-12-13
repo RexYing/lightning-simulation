@@ -4,6 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 class QuadtreeNode {
+	
+	/** Node type */
+	static final int DEFAULT = 0;
+	static final int START = 1;
+	static final int TERMINATE = 2;
+	static final int ATTRACT = 3;
 
 	private static final int TOP_NEIGHBOR = 0;
 	private static final int BOTTOM_NEIGHBOR = 1;
@@ -17,7 +23,7 @@ class QuadtreeNode {
 	 * Either empty or a list of 4 children: top left, top right, bottom right,
 	 * bottom left.
 	 */
-	List<QuadtreeNode> children = new ArrayList<>();
+	List<QuadtreeNode> children;
 
 	boolean isLeaf;
 
@@ -56,6 +62,8 @@ class QuadtreeNode {
 	boolean isCandidate = false;
 
 	double potential = 0;
+	/**  right-hand side of linear system */
+	double rhs = 0;
 
 	int type = 0;
 
@@ -72,6 +80,7 @@ class QuadtreeNode {
 		this.potential = potential;
 		this.isLeaf = true;
 		this.isBoundary = false;
+		initLists();
 	}
 
 	QuadtreeNode(int depth) {
@@ -79,11 +88,19 @@ class QuadtreeNode {
 		this.depth = depth;
 		this.isBoundary = true;
 		this.isLeaf = true;
-
+		initLists();
+	}
+	
+	private void initLists() {
+		stencil = new ArrayList<>();
+		for (int i = 0; i < 9; i++) {
+			stencil.add(0.0);
+		}
+		children = new ArrayList<>();
+		neighbors = new ArrayList<>();
 	}
 
 	void subdivide() {
-		System.out.println("divide  " + depth);
 		if (!children.isEmpty()) {
 			System.err.println("Attempt to subdivide a node that already has children.");
 			return;
@@ -197,9 +214,11 @@ class QuadtreeNode {
 	}
 
 	void populateNeighbors() {
+		neighbors = new ArrayList<>();
+		
 		QuadtreeNode neighborAbove = getNeighborAbove();
 		if (neighborAbove != null) {
-			if (!neighborAbove.children.isEmpty()) {
+			if (neighborAbove.children.isEmpty()) {
 				neighbors.add(neighborAbove);
 				neighbors.add(null);
 			} else {
@@ -213,7 +232,7 @@ class QuadtreeNode {
 		
 		QuadtreeNode neighborRight = getNeighborRight();
 		if (neighborRight != null) {
-			if (!neighborRight.children.isEmpty()) {
+			if (neighborRight.children.isEmpty()) {
 				neighbors.add(neighborRight);
 				neighbors.add(null);
 			} else {
@@ -227,7 +246,7 @@ class QuadtreeNode {
 		
 		QuadtreeNode neighborBelow = getNeighborBelow();
 		if (neighborBelow != null) {
-			if (!neighborBelow.children.isEmpty()) {
+			if (neighborBelow.children.isEmpty()) {
 				neighbors.add(neighborBelow);
 				neighbors.add(null);
 			} else {
@@ -241,7 +260,7 @@ class QuadtreeNode {
 		
 		QuadtreeNode neighborLeft = getNeighborLeft();
 		if (neighborLeft != null) {
-			if (!neighborLeft.children.isEmpty()) {
+			if (neighborLeft.children.isEmpty()) {
 				neighbors.add(neighborLeft);
 				neighbors.add(null);
 			} else {
@@ -292,5 +311,48 @@ class QuadtreeNode {
 		} else {
 			return null;
 		}
+	}
+	
+	public void computeStencil() {
+		
+		double deltaSum = 0;
+		rhs = 0;
+		
+		for (int i = 0; i < 4; i++) {
+			
+			if (neighbors.get(2 * i + 1) == null) {
+				if (depth == neighbors.get(2 * i).depth) {
+					deltaSum += (1 << depth);
+					if (!neighbors.get(2 * i).isBoundary) {
+						stencil.set(2 * i, (double)(1 << depth));
+					} else {
+						rhs += neighbors.get(2 * i).potential * (1 << depth);
+					}
+				} else {
+					// neighbor is larger (side length differs by a factor of 2 by properties of balanced quadtree)
+					deltaSum += 0.5 * (1 << depth);
+					if (!neighbors.get(2 * i).isBoundary) {
+						stencil.set(2 * i, 0.5 * (double)(1 << depth));
+					} else {
+						rhs += neighbors.get(2 * i).potential * 0.5 * (1 << depth);
+					}
+				}
+			} else {
+				// neighbor side length is smaller by a factor of 2
+				deltaSum += 2 * (1 << depth);
+				if (!neighbors.get(2 * i).isBoundary) {
+					stencil.set(2 * i, (double)(1 << depth));
+				} else {
+					rhs += neighbors.get(2 * i).potential * (1 << depth);
+				}
+				if (!neighbors.get(2 * i + 1).isBoundary) {
+					stencil.set(2 * i + 1, (double)(1 << depth));
+				} else {
+					rhs += neighbors.get(2 * i + 1).potential * (1 << depth);
+				}
+			}
+		}
+		stencil.set(8, deltaSum);
+		
 	}
 }

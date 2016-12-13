@@ -79,6 +79,9 @@ class GUI implements MouseListener, MouseMotionListener, KeyListener {
 		}
 		*/
 		simulation.display(gl);
+		boolean particleAdded = simulation.addParticle();
+		System.out.println("added? " + particleAdded);
+		
 		// Display task if any
 		if (task != null)
 			task.display(gl);

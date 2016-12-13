@@ -59,6 +59,11 @@ public class Lightning implements GLEventListener {
 	    gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
 	    
 	    gui.simulateAndDisplayScene(gl);
+	    try {
+	    	Thread.sleep(1000);
+	    } catch (InterruptedException e) {
+	    	System.out.println("Interrupted");
+	    }
 	}
 
 	@Override

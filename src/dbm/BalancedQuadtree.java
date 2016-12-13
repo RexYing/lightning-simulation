@@ -7,11 +7,7 @@ import com.jogamp.opengl.GL2;
 
 public class BalancedQuadtree {
 
-	/** Node type */
-	private static final int DEFAULT = 0;
-	private static final int START = 1;
-	private static final int TERMINATE = 2;
-	private static final int ATTRACT = 3;
+	
 
 	QuadtreeNode root;
 	private List<QuadtreeNode> finestLeaves = new ArrayList<>();
@@ -331,7 +327,7 @@ public class BalancedQuadtree {
 			node.potential = 0.5;
 			node.isAttractor = true;
 			node.isCandidate = true;
-			node.type = ATTRACT;
+			node.type = QuadtreeNode.ATTRACT;
 		}
 	}
 
@@ -340,7 +336,7 @@ public class BalancedQuadtree {
 		startNode.isBoundary = true;
 		startNode.potential = 0.0;
 		startNode.isCandidate = true;
-		startNode.type = START;
+		startNode.type = QuadtreeNode.START;
 		return startNode;
 	}
 
@@ -349,7 +345,7 @@ public class BalancedQuadtree {
 		terminateNode.isBoundary = true;
 		terminateNode.potential = 1;
 		terminateNode.isCandidate = true;
-		terminateNode.type = TERMINATE;
+		terminateNode.type = QuadtreeNode.TERMINATE;
 		return terminateNode;
 	}
 
