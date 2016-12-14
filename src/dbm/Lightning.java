@@ -105,7 +105,7 @@ public class Lightning implements GLEventListener {
 	    /* By default, no attractors are added */
 	    List<Point2D> attractors = new ArrayList<>();
 		lightningSimulation = new AdaptiveGrid(
-				SimulationConstants.WIDTH, SimulationConstants.HEIGHT, new Point2D.Double(0.5, 0.9), new Point2D.Double(0.5, 0.1), attractors);
+				SimulationConstants.WIDTH, SimulationConstants.HEIGHT);
 		//lightningSimulation = new AdaptiveGrid(
 		//		SimulationConstants.WIDTH, SimulationConstants.HEIGHT, new Point2D.Double(0.5, 0.9), new Point2D.Double(0.35, 0.62), attractors);
 		gui.addSimulation(lightningSimulation);

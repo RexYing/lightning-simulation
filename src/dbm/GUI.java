@@ -39,17 +39,19 @@ class GUI implements MouseListener, MouseMotionListener, KeyListener {
 	AdaptiveGrid simulation;
 	
 	List<Point2D> attractionPoints = new ArrayList<>();
+	Point2D startPoint;
+	Point2D terminatingPoint;
 
 	GUI() {
 		guiFrame = new JFrame("Tasks");
 		guiFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		guiFrame.setLayout(new SpringLayout());
-		guiFrame.setLayout(new GridLayout(6, 1));
+		guiFrame.setLayout(new GridLayout(3, 1));
 
 		/* Add new task buttons here, then add their functionality below. */
 		ButtonGroup buttonGroup = new ButtonGroup();
-		AbstractButton[] buttons = { new JButton("Reset"), new JButton("Load File"), new JButton("Load OBJ"),
-				new JToggleButton("Exit", false), new JToggleButton("[Some Other Task]", false), };
+		AbstractButton[] buttons = { new JButton("Reset"), new JButton("Load File"), 
+				new JToggleButton("Exit", false) };
 
 		for (int i = 0; i < buttons.length; i++) {
 			buttonGroup.add(buttons[i]);
@@ -73,18 +75,6 @@ class GUI implements MouseListener, MouseMotionListener, KeyListener {
 	 * Simulate then display particle system and any builder adornments.
 	 */
 	void simulateAndDisplayScene(GL2 gl) {
-		/*
-		if (simulate) {
-			PS.advanceTime(DT);
-		}
-
-		// Draw particles, forces, etc.
-		PS.display(gl);
-
-		if (simulate && frameExporter != null) {
-			frameExporter.writeFrame(gl);
-		}
-		*/
 		simulation.display(gl);
 		if (simulate && !simulation.hasTerminated()) {
 			simulation.addLeaf();
@@ -97,7 +87,7 @@ class GUI implements MouseListener, MouseMotionListener, KeyListener {
 	}
 	
 	void loadAttractionPointsFromFile() {
-		JFileChooser fc = new JFileChooser("./attraction-points");
+		JFileChooser fc = new JFileChooser("./lightning-config");
 	    int choice = fc.showOpenDialog(guiFrame);
 	    if (choice != JFileChooser.APPROVE_OPTION)
 	      return;
@@ -111,11 +101,20 @@ class GUI implements MouseListener, MouseMotionListener, KeyListener {
 
 	    try {
 	      java.util.Scanner s = new java.util.Scanner(file);
+	      
+	      double x = s.nextDouble();
+	      double y = s.nextDouble();
+	      simulation.addStart(x, y);
+	      
+	      x = s.nextDouble();
+	      y = s.nextDouble();
+	      simulation.addTermination(x, y);
+	      
 	      int numParticles = s.nextInt();
 	      
 	      for (int i = 0; i < numParticles; i++) {
-	        double x = s.nextDouble();
-	        double y = s.nextDouble();
+	        x = s.nextDouble();
+	        y = s.nextDouble();
 	        attractionPoints.add(new Point2D.Double(x, y));
 	      }
 	      simulation.addAttractionPoints(attractionPoints);

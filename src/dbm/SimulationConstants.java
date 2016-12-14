@@ -11,11 +11,11 @@ public class SimulationConstants {
 	/** Size of candidates from which to choose growth site */
 	static final int MAX_CANDIDATES_SIZE = 50;
 	/** Number of particles to add before solving Poisson equation again */
-	static final int SKIP = 2;
+	static final int SKIP = 4;
 	
 	/** Explained in paper: the power of potential in the formula of distribution for choosing next particle */
-	static final double ETA = 3;
+	static final double ETA = 4;
 	
-	static final double ATTRACTOR_POTENTIAL = 0.5;
+	static final double ATTRACTOR_POTENTIAL = 1;
 	
 }

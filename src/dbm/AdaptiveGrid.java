@@ -27,15 +27,18 @@ public class AdaptiveGrid {
 	
 	private LightningTree lightningTree;
 	
-	public AdaptiveGrid(int gridWidth, int gridHeight, Point2D start, Point2D termination, List<Point2D> attractors) {
-		this.quadtree = new BalancedQuadtree(gridWidth, gridHeight);
-		
-		QuadtreeNode startNode = quadtree.setStart(start.getX(), start.getY());
+	public AdaptiveGrid(int gridWidth, int gridHeight) {
+		this.quadtree = new BalancedQuadtree(gridWidth, gridHeight);		
+	}
+	
+	public void addStart(double x, double y) {
+		QuadtreeNode startNode = quadtree.setStart(x, y);
 		candidates.addAll(quadtree.checkCandidate(startNode));
-		quadtree.setTermination(termination.getX(), termination.getY());
-		addAttractionPoints(attractors);
-		
 		lightningTree = new LightningTree(startNode);
+	}
+	
+	public void addTermination(double x, double y) {
+		quadtree.setTermination(x, y);
 	}
 	
 	public void display(GL2 gl) {
@@ -55,8 +58,9 @@ public class AdaptiveGrid {
 			}
 		}
 		quadtree.drawBoundary(gl);
-		lightningTree.drawTree(gl);
-
+		if (lightningTree != null) {
+			lightningTree.drawTree(gl);
+		}
 		gl.glPopMatrix();
 		
 	}
