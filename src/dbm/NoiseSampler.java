@@ -1,6 +1,10 @@
 package dbm;
 
 import java.util.List;
+import java.util.Random;
+
+import org.la4j.Matrix;
+import org.la4j.matrix.sparse.CRSMatrix;
 
 import za.co.luma.geom.Vector2DDouble;
 import za.co.luma.math.sampling.Sampler;
@@ -26,6 +30,16 @@ public class NoiseSampler {
 			noise[(int) point.x][(int) point.y] = true;
 		}		
 		return noise;
+	}
+	
+	public void sampleNoise(int w, int h, int r, BalancedQuadtree quadtree) {
+		Sampler<Vector2DDouble> sampler = new UniformPoissonDiskSampler(0, 0, w, h, r);
+		List<Vector2DDouble> pointList = sampler.sample();
+		
+		for (Vector2DDouble point : pointList)
+		{			
+			quadtree.insert(point.x, point.y);
+		}
 	}
 	
 	public static void main(String[] args) {

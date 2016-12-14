@@ -3,6 +3,8 @@ package dbm;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 
@@ -59,11 +61,13 @@ public class Lightning implements GLEventListener {
 	    gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
 	    
 	    gui.simulateAndDisplayScene(gl);
-	    try {
+	    
+	    /*try {
 	    	Thread.sleep(100);
 	    } catch (InterruptedException e) {
 	    	System.out.println("Interrupted");
-	    }
+	    }*/
+	    
 	}
 
 	@Override
@@ -98,8 +102,12 @@ public class Lightning implements GLEventListener {
 	    gl.glEnable(GL2.GL_LIGHT0);
 	    
 
+	    /* By default, no attractors are added */
+	    List<Point2D> attractors = new ArrayList<>();
 		lightningSimulation = new AdaptiveGrid(
-				SimulationConstants.WIDTH, SimulationConstants.HEIGHT, new Point2D.Double(0.5, 0.9), new Point2D.Double(0.5, 0.1));
+				SimulationConstants.WIDTH, SimulationConstants.HEIGHT, new Point2D.Double(0.5, 0.9), new Point2D.Double(0.5, 0.1), attractors);
+		//lightningSimulation = new AdaptiveGrid(
+		//		SimulationConstants.WIDTH, SimulationConstants.HEIGHT, new Point2D.Double(0.5, 0.9), new Point2D.Double(0.35, 0.62), attractors);
 		gui.addSimulation(lightningSimulation);
 	}
 
@@ -161,8 +169,8 @@ public class Lightning implements GLEventListener {
 		});
 
 		frame.pack();
-		frame.setSize(600, 600);
-		frame.setLocation(200, 200);
+		frame.setSize(width, height);
+		frame.setLocation(400, 400);
 		frame.setVisible(true);
 		animator.start();
 	}

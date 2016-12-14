@@ -3,6 +3,15 @@ package dbm;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.soap.Node;
+
+import org.la4j.LinearAlgebra;
+import org.la4j.Matrix;
+import org.la4j.Vector;
+import org.la4j.linear.LinearSystemSolver;
+import org.la4j.matrix.sparse.CRSMatrix;
+import org.la4j.vector.dense.BasicVector;
+
 /**
  * Numerical solver for Poisson PDE on the balanced quadtree, using Incomplete
  * Cholesky Conjugate Gradient.
@@ -12,7 +21,7 @@ import java.util.List;
  */
 public class PoissonEqSolver {
 
-	private static final double EPS = 1e-7;
+	private static final double EPS = 1e-4;
 
 	private List<QuadtreeNode> leaves;
 	private List<Double> residuals;
@@ -34,9 +43,6 @@ public class PoissonEqSolver {
 
 		for (QuadtreeNode node : leaves) {
 			node.computeStencil();
-			if (node.type == QuadtreeNode.TERMINATE) {
-				System.out.println("TERMINATOR in solve  " + node.isBoundary);
-			}
 		}
 
 		assignIndex();
@@ -114,8 +120,32 @@ public class PoissonEqSolver {
 			}
 			iter++;
 		}
-
+		System.out.println("Iteration   " + iter + "  MAXR   " + maxR);
 		return iter;
+	}
+	
+	public void solveCRS() {
+		Matrix A = new CRSMatrix(leaves.size(), leaves.size());
+		Vector b = new BasicVector(leaves.size());
+		assignIndex();
+		for (QuadtreeNode node : leaves) {
+			node.computeStencil();
+		}
+		for (int i = 0; i < leaves.size(); i++) {
+			for (int j = 0; j < leaves.get(i).neighbors.size(); j++) {
+				QuadtreeNode neighbor = leaves.get(i).neighbors.get(j);
+				if (neighbor != null) {
+					A.set(i, neighbor.idx, -leaves.get(i).stencil.get(j));
+				}
+			}
+			A.set(i, i, leaves.get(i).stencil.get(8));
+			b.set(i, leaves.get(i).rhs);
+		}
+		LinearSystemSolver solver = A.withSolver(LinearAlgebra.FORWARD_BACK_SUBSTITUTION);
+		Vector x = solver.solve(b);
+		for (int i = 0; i < leaves.size(); i++) {
+			leaves.get(i).potential = x.get(i);
+		}
 	}
 
 	private void assignIndex() {

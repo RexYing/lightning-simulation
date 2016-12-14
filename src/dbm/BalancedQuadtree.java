@@ -1,6 +1,7 @@
 package dbm;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.jogamp.opengl.GL2;
@@ -22,7 +23,8 @@ public class BalancedQuadtree {
 		root.subdivide();
 
 		maxDepth = (int) Math.ceil(Math.log(Math.max(gridWidth, gridHeight)) / Math.log(2));
-		noise = new NoiseSampler().poissonDiskSample(gridWidth, gridHeight, 5);
+		noise = new boolean[gridWidth][gridHeight];
+		//noise = new NoiseSampler().poissonDiskSample(gridWidth, gridHeight, 5);
 		System.out.println("Max depth   " + maxDepth);
 	}
 
@@ -34,10 +36,10 @@ public class BalancedQuadtree {
 		gl.glColor4d(0.2, 0.2, 0.2, 0.3);
 
 		gl.glBegin(GL2.GL_LINE_STRIP);
-		gl.glVertex2d(node.rightX, 1 - node.topY);
-		gl.glVertex2d(node.rightX, 1 - node.bottomY);
-		gl.glVertex2d(node.leftX, 1 - node.bottomY);
-		gl.glVertex2d(node.leftX, 1 - node.topY);
+		gl.glVertex2d(node.rightX, node.topY);
+		gl.glVertex2d(node.rightX, node.bottomY);
+		gl.glVertex2d(node.leftX, node.bottomY);
+		gl.glVertex2d(node.leftX, node.topY);
 		gl.glEnd();
 
 		if (!node.isLeaf) {
@@ -51,10 +53,10 @@ public class BalancedQuadtree {
 
 		gl.glColor4d(r, g, b, 1);
 		gl.glBegin(GL2.GL_QUADS);
-		gl.glVertex2d(node.rightX, 1 - node.topY);
-		gl.glVertex2d(node.rightX, 1 - node.bottomY);
-		gl.glVertex2d(node.leftX, 1 - node.bottomY);
-		gl.glVertex2d(node.leftX, 1 - node.topY);
+		gl.glVertex2d(node.rightX, node.topY);
+		gl.glVertex2d(node.rightX, node.bottomY);
+		gl.glVertex2d(node.leftX, node.bottomY);
+		gl.glVertex2d(node.leftX, node.topY);
 		gl.glEnd();
 	}
 
@@ -136,7 +138,7 @@ public class BalancedQuadtree {
 		if (!existed) {
 			finestLeaves.addAll(currNode.parent.children);
 			for (QuadtreeNode child : currNode.parent.children) {
-				setAttraction(child);
+				generateNoiseAttraction(child);
 			}
 		}
 
@@ -161,7 +163,7 @@ public class BalancedQuadtree {
 				}
 				finestLeaves.addAll(neighbor.parent.children);
 				for (QuadtreeNode child : neighbor.parent.children) {
-					setAttraction(child);
+					generateNoiseAttraction(child);
 				}
 			}
 		}
@@ -176,7 +178,7 @@ public class BalancedQuadtree {
 				}
 				finestLeaves.addAll(neighborTopLeft.parent.children);
 				for (QuadtreeNode child : neighborTopLeft.parent.children) {
-					setAttraction(child);
+					generateNoiseAttraction(child);
 				}
 			}
 
@@ -188,7 +190,7 @@ public class BalancedQuadtree {
 				}
 				finestLeaves.addAll(neighborTopRight.parent.children);
 				for (QuadtreeNode child : neighborTopRight.parent.children) {
-					setAttraction(child);
+					generateNoiseAttraction(child);
 				}
 			}
 		}
@@ -203,7 +205,7 @@ public class BalancedQuadtree {
 				}
 				finestLeaves.addAll(neighborBottomLeft.parent.children);
 				for (QuadtreeNode child : neighborBottomLeft.parent.children) {
-					setAttraction(child);
+					generateNoiseAttraction(child);
 				}
 			}
 
@@ -215,7 +217,7 @@ public class BalancedQuadtree {
 				}
 				finestLeaves.addAll(neighborBottomRight.parent.children);
 				for (QuadtreeNode child : neighborBottomRight.parent.children) {
-					setAttraction(child);
+					generateNoiseAttraction(child);
 				}
 			}
 		}
@@ -319,11 +321,12 @@ public class BalancedQuadtree {
 			solveFirstTime = false;
 		}
 		PoissonEqSolver solver = new PoissonEqSolver(leaves, numIterations);
-		
-		return solver.solve();
+		solver.solveCRS();
+		//return solver.solve();
+		return 0;
 	}
 
-	private void setAttraction(QuadtreeNode node) {
+	private void generateNoiseAttraction(QuadtreeNode node) {
 		if (node.type != QuadtreeNode.DEFAULT) {
 			return;
 		}
@@ -333,9 +336,23 @@ public class BalancedQuadtree {
 			node.isBoundary = true;
 			node.potential = 0.5;
 			node.isAttractor = true;
-			node.isCandidate = true;
+			node.isCandidate = false;
 			node.type = QuadtreeNode.ATTRACT;
+			System.out.println("NOISE");
 		}
+	}
+	
+	public QuadtreeNode setAttraction(double x, double y) {
+		QuadtreeNode attractNode = insert(x, y);
+		if (attractNode.type != QuadtreeNode.DEFAULT) {
+			System.out.println("An attraction point is already a start/terminating point.");
+			return attractNode;
+		}
+		attractNode.isBoundary = true;
+		attractNode.potential = SimulationConstants.ATTRACTOR_POTENTIAL;
+		attractNode.isCandidate = false;
+		attractNode.type = QuadtreeNode.ATTRACT;
+		return attractNode;
 	}
 
 	public QuadtreeNode setStart(double x, double y) {

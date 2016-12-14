@@ -2,8 +2,8 @@ package dbm;
 
 public class GUIConstants {
 
-	static final int DEFAULT_WIDTH = 600;
-	static final int DEFAULT_HEIGHT = 600;
+	static final int DEFAULT_WIDTH = 800;
+	static final int DEFAULT_HEIGHT = 800;
 	static final int DEFAULT_POS_X = 200;
 	static final int DEFAULT_POS_Y = 200;
 	static final double CAMERA_X = 0.5;

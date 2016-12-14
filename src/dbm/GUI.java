@@ -8,10 +8,15 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.Point2D;
+import java.sql.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JToggleButton;
 import javax.swing.SpringLayout;
@@ -32,6 +37,8 @@ class GUI implements MouseListener, MouseMotionListener, KeyListener {
 	TaskSelector taskSelector = new TaskSelector();
 	
 	AdaptiveGrid simulation;
+	
+	List<Point2D> attractionPoints = new ArrayList<>();
 
 	GUI() {
 		guiFrame = new JFrame("Tasks");
@@ -79,12 +86,45 @@ class GUI implements MouseListener, MouseMotionListener, KeyListener {
 		}
 		*/
 		simulation.display(gl);
-		boolean particleAdded = simulation.addParticle();
+		if (simulate && !simulation.hasTerminated()) {
+			simulation.addLeaf();
+		}
 		
 		// Display task if any
 		if (task != null)
 			task.display(gl);
 		
+	}
+	
+	void loadAttractionPointsFromFile() {
+		JFileChooser fc = new JFileChooser("./attraction-points");
+	    int choice = fc.showOpenDialog(guiFrame);
+	    if (choice != JFileChooser.APPROVE_OPTION)
+	      return;
+	    String fileName = fc.getSelectedFile().getAbsolutePath();
+
+	    java.io.File file = new java.io.File(fileName);
+	    if (!file.exists()) {
+	      System.err.println("Error: Tried to load a frame from a non-existant file.");
+	      return;
+	    }
+
+	    try {
+	      java.util.Scanner s = new java.util.Scanner(file);
+	      int numParticles = s.nextInt();
+	      
+	      for (int i = 0; i < numParticles; i++) {
+	        double x = s.nextDouble();
+	        double y = s.nextDouble();
+	        attractionPoints.add(new Point2D.Double(x, y));
+	      }
+	      simulation.addAttractionPoints(attractionPoints);
+	      s.close();
+
+	    } catch (Exception e) {
+	      e.printStackTrace();
+	      System.err.println("OOPS: " + e);
+	    }
 	}
 
 	/**
@@ -121,7 +161,7 @@ class GUI implements MouseListener, MouseMotionListener, KeyListener {
 				task = new PlaceholderTask();
 			} else if (cmd.equals("Load File")) {
 				System.out.println("Load from file");
-				//loadFrameFromFile();
+				loadAttractionPointsFromFile();
 			} else {
 				System.out.println("UNHANDLED ActionEvent: " + e);
 			}

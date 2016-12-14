@@ -1,7 +1,10 @@
 package dbm;
 
+import java.awt.geom.QuadCurve2D;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.text.StyledEditorKit.ForegroundAction;
 
 class QuadtreeNode {
 	
@@ -277,8 +280,8 @@ class QuadtreeNode {
 		}
 	}
 
-	QuadtreeNode getNeighborTopLeft(QuadtreeNode node) {
-		QuadtreeNode neighborAbove = node.getNeighborAbove();
+	QuadtreeNode getNeighborTopLeft() {
+		QuadtreeNode neighborAbove = getNeighborAbove();
 		if (neighborAbove != null) {
 			return neighborAbove.getNeighborLeft();
 		} else {
@@ -286,8 +289,8 @@ class QuadtreeNode {
 		}
 	}
 
-	QuadtreeNode getNeighborTopRight(QuadtreeNode node) {
-		QuadtreeNode neighborAbove = node.getNeighborAbove();
+	QuadtreeNode getNeighborTopRight() {
+		QuadtreeNode neighborAbove = getNeighborAbove();
 		if (neighborAbove != null) {
 			return neighborAbove.getNeighborRight();
 		} else {
@@ -295,8 +298,8 @@ class QuadtreeNode {
 		}
 	}
 
-	QuadtreeNode getNeighborBottomLeft(QuadtreeNode node) {
-		QuadtreeNode neighborBelow = node.getNeighborBelow();
+	QuadtreeNode getNeighborBottomLeft() {
+		QuadtreeNode neighborBelow = getNeighborBelow();
 		if (neighborBelow != null) {
 			return neighborBelow.getNeighborLeft();
 		} else {
@@ -304,13 +307,43 @@ class QuadtreeNode {
 		}
 	}
 
-	QuadtreeNode getNeighborBottomRight(QuadtreeNode node) {
-		QuadtreeNode neighborBelow = node.getNeighborBelow();
+	QuadtreeNode getNeighborBottomRight() {
+		QuadtreeNode neighborBelow = getNeighborBelow();
 		if (neighborBelow != null) {
 			return neighborBelow.getNeighborRight();
 		} else {
 			return null;
 		}
+	}
+	
+	/**
+	 * Get all neighbors including diagonal neighbors
+	 * @return
+	 */
+	List<QuadtreeNode> getAllNeighbors() {
+		List<QuadtreeNode> allNeighbors = new ArrayList<>();
+		for (QuadtreeNode node : neighbors) {
+			if (node != null) {
+				allNeighbors.add(node);
+			}
+		}
+		QuadtreeNode topLeft = getNeighborTopLeft();
+		if (topLeft != null) {
+			allNeighbors.add(topLeft);
+		}
+		QuadtreeNode topRight = getNeighborTopRight();
+		if (topRight != null) {
+			allNeighbors.add(topRight);
+		}
+		QuadtreeNode bottomLeft = getNeighborBottomLeft();
+		if (bottomLeft != null) {
+			allNeighbors.add(bottomLeft);
+		}
+		QuadtreeNode bottomRight = getNeighborBottomRight();
+		if (bottomRight != null) {
+			allNeighbors.add(bottomRight);
+		}
+		return allNeighbors;
 	}
 	
 	public void computeStencil() {
@@ -327,6 +360,7 @@ class QuadtreeNode {
 						stencil.set(2 * i, (double)(1 << depth));
 					} else {
 						rhs += neighbors.get(2 * i).potential * (1 << depth);
+						//System.out.println(neighbors.get(2 * i).potential + "  " + neighbors.get(2 * i).type);
 					}
 				} else {
 					// neighbor is larger (side length differs by a factor of 2 by properties of balanced quadtree)
@@ -335,6 +369,7 @@ class QuadtreeNode {
 						stencil.set(2 * i, 0.5 * (double)(1 << depth));
 					} else {
 						rhs += neighbors.get(2 * i).potential * 0.5 * (1 << depth);
+						
 					}
 				}
 			} else {

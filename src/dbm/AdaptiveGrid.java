@@ -13,7 +13,7 @@ import com.jogamp.opengl.GL2;
  *
  */
 public class AdaptiveGrid {
-	private static final double EPS = 1e-7;
+	private static final double EPS = 1e-8;
 	
 	/** True if simulation has reached the termination point */
 	private boolean terminated;
@@ -25,13 +25,17 @@ public class AdaptiveGrid {
 	
 	private List<QuadtreeNode> candidates = new ArrayList<>();
 	
-	public AdaptiveGrid(int gridWidth, int gridHeight, Point2D start, Point2D termination) {
+	private LightningTree lightningTree;
+	
+	public AdaptiveGrid(int gridWidth, int gridHeight, Point2D start, Point2D termination, List<Point2D> attractors) {
 		this.quadtree = new BalancedQuadtree(gridWidth, gridHeight);
 		
 		QuadtreeNode startNode = quadtree.setStart(start.getX(), start.getY());
 		candidates.addAll(quadtree.checkCandidate(startNode));
 		quadtree.setTermination(termination.getX(), termination.getY());
-
+		addAttractionPoints(attractors);
+		
+		lightningTree = new LightningTree(startNode);
 	}
 	
 	public void display(GL2 gl) {
@@ -40,7 +44,7 @@ public class AdaptiveGrid {
 
 		for (QuadtreeNode node : quadtree.getLeaves()) {
 			if (node.type == QuadtreeNode.START) {
-				quadtree.drawNode(node, 0, 1, 0, gl);
+				quadtree.drawNode(node, 0, 0.1, 0, gl);
 				continue;
 			}
 			if (node.isBoundary)
@@ -51,6 +55,7 @@ public class AdaptiveGrid {
 			}
 		}
 		quadtree.drawBoundary(gl);
+		lightningTree.drawTree(gl);
 
 		gl.glPopMatrix();
 		
@@ -58,13 +63,12 @@ public class AdaptiveGrid {
 	
 	/**
 	 * 
-	 * @return true if particle is added in simulation.
+	 * @return true if a leaf corresponding to the most fine-grained size is added in simulation.
 	 */
-	public boolean addParticle() {
-		int iter = 0;
+	public boolean addLeaf() {
 		if (numNewParticlesBeforeSolve == SimulationConstants.SKIP) {
 			numNewParticlesBeforeSolve = 0;
-			iter = quadtree.solve();
+			quadtree.solve();
 		} else {
 			numNewParticlesBeforeSolve++;
 		}
@@ -89,8 +93,7 @@ public class AdaptiveGrid {
 		}
 		
 		if (totalPotential < EPS) {
-			System.out.println("Brownian at current step");
-			System.out.println(totalPotential);
+			System.out.println("Brownian at current step. Total potential is too small: " + totalPotential);
 			idxChosen = (int) (Math.random() * candidates.size());
 		} else {
 			double potentialSampleSum = probDist.get(0) / totalPotential;
@@ -109,30 +112,56 @@ public class AdaptiveGrid {
 		addedNode.populateNeighbors();
 		// find a neighbor that is also part of the lightning for connecting particles in render
 		QuadtreeNode neighborChosen = null;
-		for (QuadtreeNode neighbor : addedNode.neighbors) {
-			if (neighbor != null && neighbor.type == QuadtreeNode.START) {
+		for (QuadtreeNode neighbor : addedNode.getAllNeighbors()) {
+			if (neighbor.type == QuadtreeNode.START) {
 				neighborChosen = neighbor;
+				break;
 			}
 		}
+		if (neighborChosen == null) {
+			System.err.println("Newly added particle does not have neighbors that are part of the lightning.");
+		}
+		lightningTree.addEdge(neighborChosen, addedNode);
 
 		quadtree.insert(addedNode.midX, addedNode.midY);
 
 		candidates.addAll(quadtree.checkCandidate(addedNode));
+		if (candidates.size() > SimulationConstants.MAX_CANDIDATES_SIZE) {
+			for (int i = 0; i < candidates.size() - SimulationConstants.MAX_CANDIDATES_SIZE; i++) {
+				candidates.remove(i);
+			}
+		}
 		
-		terminated(addedNode);
+		terminated = terminated(addedNode);
+		if (terminated) {
+			lightningTree.analyzeSaliency();
+		}
 		return true;
 	}
 	
 	private boolean terminated(QuadtreeNode node) {
 		boolean terminated = false;
+		
 		for (QuadtreeNode neighbor : node.neighbors) {
 			if (neighbor != null && neighbor.type == QuadtreeNode.TERMINATE) {
 				terminated = true;
 				break;
 			}
 		}
-		
+		if (terminated) {
+			System.out.println("SIMULATION FINISHED SUCCESSULLY!");
+		}
 		return terminated;
+	}
+	
+	public boolean hasTerminated() {
+		return terminated;
+	}
+	
+	public void addAttractionPoints(List<Point2D> attractionPoints) {
+		for (Point2D p : attractionPoints) {
+			quadtree.setAttraction(p.getX(), p.getY());
+		}
 	}
 
 }
